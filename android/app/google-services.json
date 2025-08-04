@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "387521966166",
+    "project_id": "gigstaskmanager",
+    "storage_bucket": "gigstaskmanager.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:387521966166:android:f4e0baf76c225cd745cbf7",
+        "android_client_info": {
+          "package_name": "com.taskmanager"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "387521966166-mac9ge6dnhkf31l8u8mls09tkjab3teg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.taskmanager",
+            "certificate_hash": "29ef8042ed11c7484e8d53b67033debdfe0bf091"
+          }
+        },
+        {
+          "client_id": "387521966166-rhfek880sd38v9e9scqp5v0bhkr3jdj3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBy_TcmaQajzF-ExJ4dBG3macHlmSfRu4U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "387521966166-rhfek880sd38v9e9scqp5v0bhkr3jdj3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
