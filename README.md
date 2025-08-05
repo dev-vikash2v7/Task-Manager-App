@@ -23,7 +23,7 @@ Simple task management app for gig workers that allows users to create, update, 
    <img src="https://github.com/dev-vikash2v7/Task-Manager-App/blob/main/assets/1.jpg" height="400px"  align="center"/>
 <img src="https://github.com/dev-vikash2v7/Task-Manager-App/blob/main/assets/taskmanager.jpg" height="400px"  align="center"/>
 <img src="https://github.com/dev-vikash2v7/Task-Manager-App/blob/main/assets/2.jpg" height="400px"  align="center"/>
-<img src="https://github.com/dev-vikash2v7/Task-Manager-App/blob/main/assets/3.jpg" height="400px"  align="center"/>
+
 <img src="https://github.com/dev-vikash2v7/Task-Manager-App/blob/main/assets/4.jpg" height="400px"  align="center"/>
 
 </div>
