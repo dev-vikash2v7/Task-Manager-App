@@ -16,8 +16,7 @@
 
 ## <a name="introduction">🤖 Introduction</a>
 
-<img src="https://drive.google.com/file/d/1V870PwLbNQC_Z7lQariTJusN6zkjLKHC/view?usp=sharing" height="500" >
-
+ ![img](https://drive.google.com/file/d/1V870PwLbNQC_Z7lQariTJusN6zkjLKHC/view?usp=sharing) 
 
 Simple task management app for gig workers that allows users to create, update, delete, and view tasks. The app should have basic user authentication, local data storage, and an intuitive user interface.
 
@@ -50,3 +49,29 @@ Follow these steps to set up the project locally on your machine.
 Make sure you have the following installed on your machine:
 
 - [Git](https://git-scm.com/)
+- [Node.js](https://nodejs.org/en)
+- [npm](https://www.npmjs.com/) (Node Package Manager)
+
+**Cloning the Repository**
+
+```bash
+git clone https://github.com/dev-vikash2v7/Task-Manager-App.git
+cd Task-Manager-App
+```
+**Installation**
+
+Install the project dependencies using npm:
+
+```bash
+yarn
+```
+
+**Running the Project**
+
+```bash
+yarn android
+
+yarn ios
+```
+
+
