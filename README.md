@@ -66,15 +66,15 @@ cd Task-Manager-App
 Install the project dependencies using npm:
 
 ```bash
-yarn
+npm install
 ```
 
 **Running the Project**
 
 ```bash
-yarn android
+npm run android
 
-yarn ios
+yarn run ios
 ```
 
 
