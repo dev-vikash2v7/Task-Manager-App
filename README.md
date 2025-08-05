@@ -15,8 +15,8 @@
 5. 📲 <a name="download-apk" href="https://drive.google.com/file/d/1tr2EDPdSyIJ-Ff2IrrLEyvesaWo1b-vB/view?usp=drive_link">[Download apk]</a>
 
 ## <a name="introduction">🤖 Introduction</a>
-
- ![img](https://drive.google.com/file/d/1V870PwLbNQC_Z7lQariTJusN6zkjLKHC/view?usp=sharing) 
+ 
+<img src="https://github.com/dev-vikash2v7/Task-Manager-App/blob/main/taskmanager.jpg" />
 
 Simple task management app for gig workers that allows users to create, update, delete, and view tasks. The app should have basic user authentication, local data storage, and an intuitive user interface.
 
