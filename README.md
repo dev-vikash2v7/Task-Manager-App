@@ -1,6 +1,7 @@
 <div align="center">
   <div>
     <img src="https://img.shields.io/badge/-React_Native-black?style=for-the-badge&logoColor=white&logo=react&color=61DAFB" alt="react.js" />
+   <img src="https://img.shields.io/badge/Firebase-red?style=for-the-badge&logoColor=white&logo=firebase&color=red"" alt="firebase" />
    
   </div>
   <h3 align="center">Gigs Task Manager</h3>
