@@ -15,10 +15,13 @@
 5. 📲 <a name="download-apk" href="https://drive.google.com/file/d/1tr2EDPdSyIJ-Ff2IrrLEyvesaWo1b-vB/view?usp=drive_link">[Download apk]</a>
 
 ## <a name="introduction">🤖 Introduction</a>
- 
-<img src="https://github.com/dev-vikash2v7/Task-Manager-App/blob/main/taskmanager.jpg" />
-
+ <div>
+<p>
 Simple task management app for gig workers that allows users to create, update, delete, and view tasks. The app should have basic user authentication, local data storage, and an intuitive user interface.
+</p>
+<img src="https://github.com/dev-vikash2v7/Task-Manager-App/blob/main/taskmanager.jpg" height="400px"  align="center"/>
+
+</div>
 
 ## <a name="tech-stack">⚙️ Tech Stack</a>
 
