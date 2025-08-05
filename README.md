@@ -29,10 +29,10 @@ Simple task management app for gig workers that allows users to create, update, 
 
 ## <a name="tech-stack">⚙️ Tech Stack</a>
 
-- React Native
-- Firebase Auth & Store
-- React Native Paper
-
+- React Native  - Framework
+- Firebase  - Auth & Store 
+- React Native Paper - UI
+- Zustand  - State Management
 
 ## <a name="features">🔋 Features</a>
 
