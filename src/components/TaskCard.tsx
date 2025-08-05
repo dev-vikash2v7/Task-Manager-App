@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Card, Text, Chip, IconButton, useTheme } from 'react-native-paper';
 import { Task } from '../models/Task';
+import { formatDateTime, isOverdue, getPriorityColor } from '../utils/dateUtils';
 
 interface TaskCardProps {
   task: Task;
@@ -18,7 +19,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
 }) => {
   const theme = useTheme();
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityThemeColor = (priority: string) => {
     switch (priority) {
       case 'high':
         return theme.colors.error;
@@ -31,17 +32,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
     }
   };
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
-
-  const isOverdue = (date: Date) => {
-    return new Date() > date && !task.isCompleted;
-  };
+  const isTaskOverdue = isOverdue(task.dueDate) && !task.isCompleted;
 
   return (
     <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
@@ -62,8 +53,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
             </Text>
             <Chip 
               mode="outlined" 
-              textStyle={{ color: getPriorityColor(task.priority) }}
-              style={[styles.priorityChip, { borderColor: getPriorityColor(task.priority) }]}
+              textStyle={{ color: getPriorityThemeColor(task.priority) }}
+              style={[styles.priorityChip, { borderColor: getPriorityThemeColor(task.priority) }]}
             >
               {task.priority.toUpperCase()}
             </Chip>
@@ -103,18 +94,29 @@ const TaskCard: React.FC<TaskCardProps> = ({
         </Text>
         
         <View style={styles.footer}>
-          <Text 
-            variant="bodySmall" 
-            style={[
-              styles.date,
-              { 
-                color: isOverdue(task.dueDate) ? theme.colors.error : theme.colors.onSurfaceVariant 
-              }
-            ]}
-          >
-            Due: {formatDate(task.dueDate)}
-            {isOverdue(task.dueDate) && ' (Overdue)'}
-          </Text>
+          <View style={styles.dateContainer}>
+            <Text 
+              variant="bodySmall" 
+              style={[
+                styles.date,
+                { 
+                  color: isTaskOverdue ? theme.colors.error : theme.colors.onSurfaceVariant 
+                }
+              ]}
+            >
+              {formatDateTime(task.dueDate)}
+            </Text>
+            {isTaskOverdue && (
+              <Chip 
+                mode="flat" 
+                textStyle={{ color: theme.colors.onError }}
+                style={[styles.overdueChip, { backgroundColor: theme.colors.errorContainer }]}
+                compact
+              >
+                OVERDUE
+              </Chip>
+            )}
+          </View>
         </View>
       </Card.Content>
     </Card>
@@ -161,8 +163,18 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  dateContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   date: {
     fontWeight: '500',
+    flex: 1,
+  },
+  overdueChip: {
+    alignSelf: 'flex-start',
   },
 });
 

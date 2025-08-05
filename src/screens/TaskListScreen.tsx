@@ -2,22 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
 import { Text, FAB, Chip, useTheme, Menu, Divider } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { signOut, User as FirebaseUser } from 'firebase/auth';
-import { 
-  collection, 
-  query, 
-  where, 
-  orderBy, 
-  getDocs, 
-  doc, 
-  updateDoc, 
-  deleteDoc, 
-  Timestamp,
-  onSnapshot 
-} from 'firebase/firestore';
-import { db, auth } from '../config/firebase';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { auth } from '../config/firebase';
 import TaskCard from '../components/TaskCard';
 import { Task } from '../models/Task';
+import { useAuthStore } from '../stores/authStore';
+import { useTaskStore } from '../stores/taskStore';
 
 interface TaskListScreenProps {
   navigation: any;
@@ -27,29 +17,48 @@ const TaskListScreen: React.FC<TaskListScreenProps> = ({ navigation }) => {
   const theme = useTheme();
   const [menuVisible, setMenuVisible] = useState(false);
   const [filterMenuVisible, setFilterMenuVisible] = useState(false);
-  const [selectedPriority, setSelectedPriority] = useState<'low' | 'medium' | 'high' | undefined>(undefined);
-  const [selectedStatus, setSelectedStatus] = useState<'completed' | 'incomplete' | undefined>(undefined);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState<FirebaseUser | null>(null);
+
+  const { signOut } = useAuthStore();
+  const { 
+    filteredTasks, 
+    isLoading, 
+    selectedPriority, 
+    selectedStatus,
+    loadTasks,
+    toggleTaskComplete,
+    deleteTask,
+    setSelectedPriority,
+    setSelectedStatus,
+    clearFilters
+  } = useTaskStore();
 
   useEffect(() => {
     setUser(auth.currentUser);
     if (auth.currentUser) {
       loadTasks();
-      // Set up real-time listener
       const unsubscribe = setupRealtimeListener();
       return unsubscribe;
     }
   }, []);
 
   useEffect(() => {
-    applyFilters();
-  }, [tasks, selectedPriority, selectedStatus]);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log('User changed:', user);
+      setUser(user);
+      if (user) {
+        loadTasks();
+      }
+    });
+
+    return unsubscribe;
+  }, []);
 
   const setupRealtimeListener = () => {
     if (!auth.currentUser) return () => {};
+
+    const { onSnapshot, collection, query, where, orderBy } = require('firebase/firestore');
+    const { db } = require('../config/firebase');
 
     const q = query(
       collection(db, 'tasks'),
@@ -57,9 +66,9 @@ const TaskListScreen: React.FC<TaskListScreenProps> = ({ navigation }) => {
       orderBy('dueDate', 'asc')
     );
 
-    return onSnapshot(q, (querySnapshot) => {
+    return onSnapshot(q, (querySnapshot: any) => {
       const tasksData: Task[] = [];
-      querySnapshot.forEach((doc) => {
+      querySnapshot.forEach((doc: any) => {
         const data = doc.data();
         tasksData.push({
           id: doc.id,
@@ -73,97 +82,25 @@ const TaskListScreen: React.FC<TaskListScreenProps> = ({ navigation }) => {
           updatedAt: data.updatedAt.toDate()
         });
       });
-      setTasks(tasksData);
-    }, (error) => {
+      // Update tasks in store
+      useTaskStore.getState().setTasks(tasksData);
+      useTaskStore.getState().applyFilters();
+    }, (error: any) => {
       console.error('Error listening to tasks:', error);
     });
   };
 
-  const loadTasks = async () => {
-    if (!auth.currentUser) return;
-
-    setIsLoading(true);
-    try {
-      const q = query(
-        collection(db, 'tasks'),
-        where('userId', '==', auth.currentUser.uid),
-        orderBy('dueDate', 'asc')
-      );
-      
-      const querySnapshot = await getDocs(q);
-      const tasksData: Task[] = [];
-      
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        tasksData.push({
-          id: doc.id,
-          title: data.title,
-          description: data.description,
-          dueDate: data.dueDate.toDate(),
-          priority: data.priority,
-          isCompleted: data.isCompleted,
-          userId: data.userId,
-          createdAt: data.createdAt.toDate(),
-          updatedAt: data.updatedAt.toDate()
-        });
-      });
-      
-      setTasks(tasksData);
-    } catch (error) {
-      console.error('Error loading tasks:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const applyFilters = () => {
-    let filtered = [...tasks];
-    
-    if (selectedPriority) {
-      filtered = filtered.filter(task => task.priority === selectedPriority);
-    }
-    
-    if (selectedStatus) {
-      filtered = filtered.filter(task => 
-        selectedStatus === 'completed' ? task.isCompleted : !task.isCompleted
-      );
-    }
-    
-    setFilteredTasks(filtered.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime()));
-  };
-
   const handleSignOut = async () => {
     try {
-      await signOut(auth);
+      await signOut();
       console.log('User signed out successfully');
     } catch (error) {
       console.error('Sign out error:', error);
     }
   };
 
-  const handleToggleComplete = async (taskId: string, isCompleted: boolean) => {
-    try {
-      const taskRef = doc(db, 'tasks', taskId);
-      await updateDoc(taskRef, {
-        isCompleted,
-        updatedAt: Timestamp.now()
-      });
-    } catch (error) {
-      console.error('Error updating task completion:', error);
-    }
-  };
-
   const handleEditTask = (task: Task) => {
     navigation.navigate('EditTask', { task });
-  };
-
-  const handleDeleteTask = async (taskId: string) => {
-    try {
-      await deleteDoc(doc(db, 'tasks', taskId));
-      console.log('Task deleted successfully');
-    } catch (error) {
-      console.error('Error deleting task:', error);
-    }
   };
 
   const handleFilterChange = (priority?: 'low' | 'medium' | 'high', status?: 'completed' | 'incomplete') => {
@@ -172,18 +109,12 @@ const TaskListScreen: React.FC<TaskListScreenProps> = ({ navigation }) => {
     setFilterMenuVisible(false);
   };
 
-  const clearFilters = () => {
-    setSelectedPriority(undefined);
-    setSelectedStatus(undefined);
-    setFilterMenuVisible(false);
-  };
-
   const renderTask = ({ item }: { item: Task }) => (
     <TaskCard
       task={item}
-      onToggleComplete={handleToggleComplete}
+      onToggleComplete={toggleTaskComplete}
       onEdit={handleEditTask}
-      onDelete={handleDeleteTask}
+      onDelete={deleteTask}
     />
   );
 

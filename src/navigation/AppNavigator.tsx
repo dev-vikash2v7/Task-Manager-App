@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import AuthScreen from '../screens/AuthScreen';
 import TaskListScreen from '../screens/TaskListScreen';
 import CreateTaskScreen from '../screens/CreateTaskScreen';
 import EditTaskScreen from '../screens/EditTaskScreen';
 import { Task } from '../models/Task';
+import { useAuthStore } from '../stores/authStore';
 
 type RootStackParamList = {
   Auth: undefined;
@@ -19,22 +20,18 @@ type RootStackParamList = {
 const Stack = createStackNavigator<RootStackParamList>();
 
 const AppNavigator: React.FC = () => {
-  const [user, setUser] = useState<FirebaseUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, setUser } = useAuthStore();
 
   useEffect(() => {
+    console.log('user', user);
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
-      setIsLoading(false);
     });
 
     return unsubscribe;
-  }, []);
+  }, [setUser]);
 
-  if (isLoading) {
-    // You can add a loading screen here if needed
-    return null;
-  }
+  
 
   return (
     <NavigationContainer>
@@ -48,8 +45,10 @@ const AppNavigator: React.FC = () => {
         ) : (
           <>
             <Stack.Screen name="TaskList" component={TaskListScreen} />
-            <Stack.Screen 
-              name="CreateTask" 
+
+            
+            <Stack.Screen
+              name="CreateTask"
               component={CreateTaskScreen}
               options={{
                 headerShown: true,
@@ -57,8 +56,8 @@ const AppNavigator: React.FC = () => {
                 headerBackTitle: 'Back',
               }}
             />
-            <Stack.Screen 
-              name="EditTask" 
+            <Stack.Screen
+              name="EditTask"
               component={EditTaskScreen}
               options={{
                 headerShown: true,

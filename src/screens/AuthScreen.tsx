@@ -1,15 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
-import { Text, Button, useTheme, Divider } from 'react-native-paper';
+import { Text, Button, useTheme, Divider, Card } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword,
-  User as FirebaseUser 
-} from 'firebase/auth';
-import { auth } from '../config/firebase';
-import { configureGoogleSignIn, signInWithGoogle } from '../utils/googleSignIn';
+import { configureGoogleSignIn } from '../utils/googleSignIn';
+import { useAuthStore } from '../stores/authStore';
 import CustomInput from '../components/CustomInput';
+import Toast from '../components/Toast';
 
 interface AuthScreenProps {
   navigation: any;
@@ -18,17 +14,48 @@ interface AuthScreenProps {
 const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => {
   const theme = useTheme();
   const [isLogin, setIsLogin] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
+  
+  // Toast state
+  const [toast, setToast] = useState({
+    visible: false,
+    message: '',
+    type: 'success' as 'success' | 'error' ,
+  });
+
+  // Zustand auth store
+  const { 
+    error: authError, 
+    signInWithEmail, 
+    signUpWithEmail, 
+    signInWithGoogleAuth, 
+    clearError 
+  } = useAuthStore();
 
   useEffect(() => {
     configureGoogleSignIn();
   }, []);
+
+  useEffect(() => {
+    clearError();
+  }, [isLogin, clearError]);
+
+  const showToast = (message: string, type: 'success' | 'error' ) => {
+    setToast({
+      visible: true,
+      message,
+      type,
+    });
+  };
+
+  const hideToast = () => {
+    setToast(prev => ({ ...prev, visible: false }));
+  };
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
@@ -54,89 +81,58 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => {
       }
     }
 
-    setErrors(newErrors);
+    setFormErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
+    setIsLoading(true);
 
+    try {
+      if (isLogin) {
+        await signInWithEmail(email, password);
+        showToast('Signed in successfully!', 'success');
+      } else {
+        await signUpWithEmail(displayName , email, password);
+        showToast('Account created successfully!', 'success');
+      }
+    } catch (error: any) {
+      // Error is handled by the store
+      showToast(error, 'error');
+    } finally {
+      setIsLoading(false);
+      }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setFormErrors({});
     setIsLoading(true);
     
     try {
-      if (isLogin) {
-        // Sign in
-        await signInWithEmailAndPassword(auth, email, password);
-        console.log('User signed in successfully');
-      } else {
-        // Sign up
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        console.log('User created successfully:', userCredential.user.uid);
-      }
-      
-      // Navigation will be handled by AppNavigator's auth state listener
-      
+      await signInWithGoogleAuth();
+      showToast('Sign-in successful!', 'success');
     } catch (error: any) {
-      console.error('Auth error:', error);
-      let errorMessage = 'Authentication failed';
-      
-      if (error.code === 'auth/user-not-found') {
-        errorMessage = 'No account found with this email';
-      } else if (error.code === 'auth/wrong-password') {
-        errorMessage = 'Incorrect password';
-      } else if (error.code === 'auth/email-already-in-use') {
-        errorMessage = 'An account with this email already exists';
-      } else if (error.code === 'auth/weak-password') {
-        errorMessage = 'Password is too weak';
-      } else if (error.code === 'auth/invalid-email') {
-        errorMessage = 'Invalid email address';
-      }
-      
-      setErrors({ auth: errorMessage });
+      showToast(error, 'error');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    setIsGoogleLoading(true);
-    setErrors({});
-    
-    try {
-      await signInWithGoogle();
-      console.log('Google Sign-In successful');
-      // Navigation will be handled by AppNavigator's auth state listener
-      
-    } catch (error: any) {
-      console.error('Google Sign-In error:', error);
-      let errorMessage = 'Google Sign-In failed';
-      
-      if (error.code === 'auth/account-exists-with-different-credential') {
-        errorMessage = 'An account already exists with this email using a different sign-in method';
-      } else if (error.code === 'auth/invalid-credential') {
-        errorMessage = 'Invalid Google credentials';
-      } else if (error.code === 'auth/operation-not-allowed') {
-        errorMessage = 'Google Sign-In is not enabled for this app';
-      } else if (error.code === 'SIGN_IN_CANCELLED') {
-        errorMessage = 'Sign-in was cancelled';
-      } else if (error.code === 'PLAY_SERVICES_NOT_AVAILABLE') {
-        errorMessage = 'Google Play Services not available';
-      }
-      
-      setErrors({ google: errorMessage });
-    } finally {
-      setIsGoogleLoading(false);
-    }
-  };
-
   const toggleMode = () => {
     setIsLogin(!isLogin);
-    setErrors({});
+    setFormErrors({});
     setEmail('');
     setPassword('');
     setConfirmPassword('');
     setDisplayName('');
   };
+
+  // Combine form errors with auth errors
+  const allErrors = { ...formErrors };
+  if (authError) {
+    allErrors.auth = authError;
+  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -144,15 +140,25 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
+
+<Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={hideToast}
+        duration={4000}
+      />
+
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
             <Text variant="displaySmall" style={[styles.title, { color: theme.colors.primary }]}>
-              Gig Task Manager
+               Task Manager
             </Text>
             <Text variant="bodyLarge" style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
               {isLogin ? 'Sign in to your account' : 'Create your account'}
             </Text>
           </View>
+
 
           <View style={styles.form}>
             {!isLogin && (
@@ -163,10 +169,15 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => {
                 <CustomInput
                   value={displayName}
                   onChangeText={setDisplayName}
-                  error={!!errors.displayName}
+                  error={!!allErrors.displayName}
                   placeholder="Enter your display name"
                   style={styles.input}
                 />
+                {allErrors.displayName && (
+                  <Text style={[styles.fieldError, { color: theme.colors.error }]}>
+                    {allErrors.displayName}
+                  </Text>
+                )}
               </View>
             )}
 
@@ -177,12 +188,17 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => {
               <CustomInput
                 value={email}
                 onChangeText={setEmail}
-                error={!!errors.email}
+                error={!!allErrors.email}
                 placeholder="Enter your email"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 style={styles.input}
               />
+              {allErrors.email && (
+                <Text style={[styles.fieldError, { color: theme.colors.error }]}>
+                  {allErrors.email}
+                </Text>
+              )}
             </View>
 
             <View style={styles.inputContainer}>
@@ -192,11 +208,16 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => {
               <CustomInput
                 value={password}
                 onChangeText={setPassword}
-                error={!!errors.password}
+                error={!!allErrors.password}
                 placeholder="Enter your password"
                 secureTextEntry
                 style={styles.input}
               />
+              {allErrors.password && (
+                <Text style={[styles.fieldError, { color: theme.colors.error }]}>
+                  {allErrors.password}
+                </Text>
+              )}
             </View>
 
             {!isLogin && (
@@ -207,23 +228,20 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => {
                 <CustomInput
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
-                  error={!!errors.confirmPassword}
+                  error={!!allErrors.confirmPassword}
                   placeholder="Confirm your password"
                   secureTextEntry
                   style={styles.input}
                 />
-              </View>
-            )}
-
-            {Object.keys(errors).length > 0 && (
-              <View style={styles.errorContainer}>
-                {Object.values(errors).map((error, index) => (
-                  <Text key={index} style={[styles.errorText, { color: theme.colors.error }]}>
-                    {error}
+                {allErrors.confirmPassword && (
+                  <Text style={[styles.fieldError, { color: theme.colors.error }]}>
+                    {allErrors.confirmPassword}
                   </Text>
-                ))}
+                )}
               </View>
-            )}
+            )}  
+
+            
 
             <Button
               mode="contained"
@@ -231,11 +249,13 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => {
               style={styles.button}
               contentStyle={styles.buttonContent}
               loading={isLoading}
-              disabled={isLoading || isGoogleLoading}
+              disabled={isLoading}
             >
               {isLogin ? 'Sign In' : 'Sign Up'}
             </Button>
 
+{Platform.OS !== 'ios' && (
+<>
             <Divider style={styles.divider} />
 
             <Button
@@ -243,12 +263,13 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => {
               onPress={handleGoogleSignIn}
               style={styles.googleButton}
               contentStyle={styles.buttonContent}
-              loading={isGoogleLoading}
-              disabled={isLoading || isGoogleLoading}
+              disabled={isLoading}
               icon="google"
             >
               Continue with Google
             </Button>
+</>
+)}
 
             <Divider style={styles.divider} />
 
@@ -259,9 +280,11 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ navigation }) => {
             >
               {isLogin ? "Don't have an account? Sign Up" : 'Already have an account? Sign In'}
             </Button>
+     
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      
     </SafeAreaView>
   );
 };
@@ -302,12 +325,23 @@ const styles = StyleSheet.create({
   input: {
     marginBottom: 0,
   },
-  errorContainer: {
-    marginBottom: 16,
+  fieldError: {
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 4,
   },
-  errorText: {
-    fontSize: 14,
+  errorCard: {
+    marginBottom: 16,
+    elevation: 2,
+  },
+  errorTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
     marginBottom: 4,
+  },
+  errorMessage: {
+    fontSize: 14,
+    lineHeight: 20,
   },
   button: {
     marginBottom: 16,

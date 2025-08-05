@@ -2,9 +2,8 @@ import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Text, Button, useTheme, SegmentedButtons } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import DatePicker from 'react-native-date-picker';
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
-import { db, auth } from '../config/firebase';
+import DateTimePicker from 'react-native-date-picker';
+import { useTaskStore } from '../stores/taskStore';
 import CustomInput from '../components/CustomInput';
 
 interface CreateTaskScreenProps {
@@ -13,14 +12,15 @@ interface CreateTaskScreenProps {
 
 const CreateTaskScreen: React.FC<CreateTaskScreenProps> = ({ navigation }) => {
   const theme = useTheme();
-  
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState(new Date());
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [isLoading, setIsLoading] = useState(false);
+
+  // Zustand task store
+  const { addTask, isLoading, error, clearError } = useTaskStore();
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
@@ -44,43 +44,26 @@ const CreateTaskScreen: React.FC<CreateTaskScreenProps> = ({ navigation }) => {
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
-    const currentUser = auth.currentUser;
-    if (!currentUser) {
-      setErrors({ auth: 'User not authenticated' });
-      return;
-    }
-
-    setIsLoading(true);
-
     try {
-      const taskData = {
+      await addTask({
         title: title.trim(),
         description: description.trim(),
-        dueDate: Timestamp.fromDate(dueDate),
+        dueDate,
         priority,
-        isCompleted: false,
-        userId: currentUser.uid,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
-      };
-
-      await addDoc(collection(db, 'tasks'), taskData);
+        isCompleted: false
+      });
+      
       console.log('Task created successfully');
       navigation.goBack();
-      
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error creating task:', error);
-      setErrors({ firestore: 'Failed to create task. Please try again.' });
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', {
-      weekday: 'long',
       year: 'numeric',
-      month: 'long',
+      month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
@@ -94,16 +77,10 @@ const CreateTaskScreen: React.FC<CreateTaskScreenProps> = ({ navigation }) => {
         style={styles.keyboardView}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.header}>
-            <Text variant="headlineMedium" style={[styles.title, { color: theme.colors.onSurface }]}>
-              Create New Task
-            </Text>
-          </View>
-
           <View style={styles.form}>
             <View style={styles.inputContainer}>
               <Text variant="bodyMedium" style={[styles.label, { color: theme.colors.onSurface }]}>
-                Task Title
+                Title
               </Text>
               <CustomInput
                 value={title}
@@ -125,13 +102,13 @@ const CreateTaskScreen: React.FC<CreateTaskScreenProps> = ({ navigation }) => {
                 placeholder="Enter task description"
                 multiline
                 numberOfLines={4}
-                style={[styles.input, styles.textArea]}
+                style={styles.input}
               />
             </View>
 
-            <View style={styles.dateContainer}>
+            <View style={styles.inputContainer}>
               <Text variant="bodyMedium" style={[styles.label, { color: theme.colors.onSurface }]}>
-                Due Date
+                Due Date & Time
               </Text>
               <Button
                 mode="outlined"
@@ -148,7 +125,7 @@ const CreateTaskScreen: React.FC<CreateTaskScreenProps> = ({ navigation }) => {
               )}
             </View>
 
-            <View style={styles.priorityContainer}>
+            <View style={styles.inputContainer}>
               <Text variant="bodyMedium" style={[styles.label, { color: theme.colors.onSurface }]}>
                 Priority
               </Text>
@@ -158,46 +135,35 @@ const CreateTaskScreen: React.FC<CreateTaskScreenProps> = ({ navigation }) => {
                 buttons={[
                   { value: 'low', label: 'Low' },
                   { value: 'medium', label: 'Medium' },
-                  { value: 'high', label: 'High' }
+                  { value: 'high', label: 'High' },
                 ]}
                 style={styles.segmentedButtons}
               />
             </View>
 
-            {Object.keys(errors).length > 0 && (
+            {error && (
               <View style={styles.errorContainer}>
-                {Object.values(errors).map((error, index) => (
-                  <Text key={index} style={[styles.errorText, { color: theme.colors.error }]}>
-                    {error}
-                  </Text>
-                ))}
+                <Text style={[styles.errorText, { color: theme.colors.error }]}>
+                  {error}
+                </Text>
               </View>
             )}
 
-            <View style={styles.buttonContainer}>
-              <Button
-                mode="outlined"
-                onPress={() => navigation.goBack()}
-                style={[styles.button, styles.cancelButton]}
-                disabled={isLoading}
-              >
-                Cancel
-              </Button>
-              <Button
-                mode="contained"
-                onPress={handleSubmit}
-                style={[styles.button, styles.submitButton]}
-                loading={isLoading}
-                disabled={isLoading}
-              >
-                Create Task
-              </Button>
-            </View>
+            <Button
+              mode="contained"
+              onPress={handleSubmit}
+              style={styles.button}
+              contentStyle={styles.buttonContent}
+              loading={isLoading}
+              disabled={isLoading}
+            >
+              Create Task
+            </Button>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <DatePicker
+      <DateTimePicker
         modal
         open={showDatePicker}
         date={dueDate}
@@ -226,17 +192,11 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     padding: 24,
   },
-  header: {
-    marginBottom: 32,
-  },
-  title: {
-    fontWeight: 'bold',
-  },
   form: {
-    flex: 1,
+    width: '100%',
   },
   inputContainer: {
-    marginBottom: 16,
+    marginBottom: 24,
   },
   label: {
     marginBottom: 8,
@@ -245,18 +205,8 @@ const styles = StyleSheet.create({
   input: {
     marginBottom: 0,
   },
-  textArea: {
-    height: 100,
-    textAlignVertical: 'top',
-  },
-  dateContainer: {
-    marginBottom: 16,
-  },
   dateButton: {
-    marginTop: 4,
-  },
-  priorityContainer: {
-    marginBottom: 24,
+    marginTop: 8,
   },
   segmentedButtons: {
     marginTop: 8,
@@ -266,21 +216,13 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 14,
-    marginBottom: 4,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 16,
+    marginTop: 4,
   },
   button: {
-    flex: 1,
+    marginTop: 16,
   },
-  cancelButton: {
-    marginRight: 6,
-  },
-  submitButton: {
-    marginLeft: 6,
+  buttonContent: {
+    paddingVertical: 8,
   },
 });
 
