@@ -1,6 +1,7 @@
 <div align="center">
   <div>
     <img src="https://img.shields.io/badge/-React_Native-black?style=for-the-badge&logoColor=white&logo=react&color=61DAFB" alt="react.js" />
+   <img src="https://img.shields.io/badge/Firebase-red?style=for-the-badge&logoColor=white&logo=firebase&color=red"" alt="firebase" />
    
   </div>
   <h3 align="center">Gigs Task Manager</h3>
@@ -22,17 +23,17 @@ Simple task management app for gig workers that allows users to create, update, 
    <img src="https://github.com/dev-vikash2v7/Task-Manager-App/blob/main/assets/1.jpg" height="400px"  align="center"/>
 <img src="https://github.com/dev-vikash2v7/Task-Manager-App/blob/main/assets/taskmanager.jpg" height="400px"  align="center"/>
 <img src="https://github.com/dev-vikash2v7/Task-Manager-App/blob/main/assets/2.jpg" height="400px"  align="center"/>
-<img src="https://github.com/dev-vikash2v7/Task-Manager-App/blob/main/assets/3.jpg" height="400px"  align="center"/>
+
 <img src="https://github.com/dev-vikash2v7/Task-Manager-App/blob/main/assets/4.jpg" height="400px"  align="center"/>
 
 </div>
 
 ## <a name="tech-stack">⚙️ Tech Stack</a>
 
-- React Native
-- Firebase Auth & Store
-- React Native Paper
-
+- React Native  - Framework
+- Firebase  - Auth & Store 
+- React Native Paper - UI
+- Zustand  - State Management
 
 ## <a name="features">🔋 Features</a>
 
