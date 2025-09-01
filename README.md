@@ -2,9 +2,10 @@
   <div>
     <img src="https://img.shields.io/badge/-React_Native-black?style=for-the-badge&logoColor=white&logo=react&color=61DAFB" alt="react.js" />
    <img src="https://img.shields.io/badge/Firebase-red?style=for-the-badge&logoColor=white&logo=firebase&color=red"" alt="firebase" />
-   
-  </div>
-  <h3 align="center">Gigs Task Manager</h3>
+   <img src="https://img.shields.io/badge/Firebase-green?style=for-the-badge&logoColor=white&logo=nodejs&color=red"" alt="Nodejs" />
+   <img src="https://img.shields.io/badge/Firebase-green?style=for-the-badge&logoColor=white&logo=mongodb&color=red"" alt="mongodb" /> 
+ </div>
+  <h3 align="center"> Task Manager App</h3>
 </div>
 
 ## 📋 <a name="table">Table of Contents</a>
@@ -14,6 +15,7 @@
 3. 🔋 [Features](#features)
 4. 🤸 [Quick Start](#quick-start)
 5. 📲 <a name="download-apk" href="https://drive.google.com/file/d/1tr2EDPdSyIJ-Ff2IrrLEyvesaWo1b-vB/view?usp=drive_link">[Download apk]</a>
+
 
 ## <a name="introduction">🤖 Introduction</a>
  <div>
@@ -56,9 +58,71 @@ Follow these steps to set up the project locally on your machine.
 
 Make sure you have the following installed on your machine:
 
-- [Git](https://git-scm.com/)
-- [Node.js](https://nodejs.org/en)
-- [npm](https://www.npmjs.com/) (Node Package Manager)
+
+## Prerequisites
+
+- **Node.js** (v18 or higher)
+- **npm** or **yarn**
+- **MongoDB** (local installation or MongoDB Atlas account)
+- **React Native development environment** (for mobile development)
+- **Android Studio** (for Android development)
+- **Xcode** (for iOS development, macOS only)
+
+
+## Backend Setup
+
+### 1. Clone Backend
+```bash
+git clone https://github.com/dev-vikash2v7/taskmanager-backend.git
+cd taskmanager-backend
+
+```
+
+### 2. Install Dependencies
+```bash
+npm install
+```
+
+### 3. Set Up Environment Variables
+```bash
+# Copy the example environment file
+cp env.example .env
+```
+
+Edit the `.env` file with your configuration:
+```env
+# Server Configuration
+PORT=5000
+NODE_ENV=development
+
+# MongoDB Configuration
+MONGODB_URI=mongodb://localhost:27017/taskmanager
+# For MongoDB Atlas, use: mongodb+srv://username:password@cluster.mongodb.net/taskmanager
+
+# JWT Configuration
+JWT_SECRET=your_super_secret_jwt_key_here_make_it_long_and_random
+JWT_EXPIRE=7d
+
+
+```
+
+### 4. Set Up MongoDB
+
+#### Option A: Local MongoDB
+1. Install MongoDB locally
+2. Start MongoDB service
+3. Create database: `taskmanager`
+
+#### Option B: MongoDB Atlas (Cloud)
+1. Create a free account at [MongoDB Atlas](https://www.mongodb.com/atlas)
+2. Create a new cluster
+3. Get your connection string
+4. Update `MONGODB_URI` in `.env`
+
+
+# Application setup 
+
+
 
 **Cloning the Repository**
 
